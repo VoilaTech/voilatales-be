@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
+import uuid
 
 
 class UserManager(BaseUserManager):
@@ -18,7 +19,6 @@ class UserManager(BaseUserManager):
             phone_number  = phone_number,
             display_name  = display_name,
             username      = username,
-            display_name  = display_name,
             display_image = display_image
         )
 

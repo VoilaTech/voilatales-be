@@ -1,5 +1,5 @@
 from django.db import models
-from ..user_profile.models import User
+from user_profile.models import User
 import uuid
 
 class Post(models.Model):
