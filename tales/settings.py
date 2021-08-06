@@ -43,8 +43,11 @@ INSTALLED_APPS = [
     'django_comments',
     'feed',
     'user_profile',
-    'rest_framework'
+    # 'coreapi',
+    'rest_framework',
 ]
+
+APPEND_SLASH=False
 
 COMMENTS_APP = 'django_comments_xtd'
 
@@ -108,6 +111,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+# }
 
 
 # Password validation

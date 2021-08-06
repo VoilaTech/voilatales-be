@@ -1,0 +1,21 @@
+info:
+  description: ''
+  title: ''
+  version: ''
+openapi: 3.0.0
+paths:
+  /verify/{phone}/:
+    post:
+      operationId: verify_create
+      parameters:
+      - in: path
+        name: phone
+        required: true
+        schema:
+          description: ''
+          title: ''
+          type: string
+      tags:
+      - verify
+servers:
+- url: ''
