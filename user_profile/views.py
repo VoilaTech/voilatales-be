@@ -8,17 +8,18 @@ import base64
 
 
 
+
 class generateKey:
-    @staticmethod
-    def returnValue(phone):
-        return str(phone) + str(datetime.date(datetime.now())) + "Some Random Secret Key"
+	@staticmethod
+	def returnValue(phone):
+		return str(phone) + str(datetime.date(datetime.now())) + "Some Random Secret Key"
 
 
 EXPIRY_TIME = 300 # seconds
 
 class getRegistered(APIView):
 
-    # Get to Create a call for OTP
+	# Get to Create a call for OTP
 	# @staticmethod
 	def post(self, request):
 		phone = request.data.get("phone")
@@ -30,14 +31,14 @@ class getRegistered(APIView):
 		try:
 			phone_number = User.objects.get(phone_number=phone)  # if Mobile already exists the take this else create New One
 		except ObjectDoesNotExist:
-		    User.objects.create(
-		        phone_number=phone,
-		        display_name=display_name,
-		        username= username,
-		        display_image=display_image,
-		        isVerified = False
-		    )
-		    phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
+			User.objects.create(
+				phone_number=phone,
+				display_name=display_name,
+				username= username,
+				display_image=display_image,
+				isVerified = False
+			)
+			phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
 		phone_number.save()  # Save the data
 		keygen = generateKey()
 		key = base64.b32encode(keygen.returnValue(phone).encode())  # Key is generated
@@ -48,19 +49,21 @@ class getRegistered(APIView):
 
 
 class getVerified(APIView):
-    # This Method verifies the OTP
-    # @staticmethod
-    def post(self, request):
-        try:
-            phone_number = User.objects.get(phone_number=request.data.get("phone"))
-        except ObjectDoesNotExist:
-            return Response("User does not exist", status=404)  # False Call
+	# This Method verifies the OTP
+	def post(self, request):
+		# import pdb; pdb.set_trace()
+		try:
+			phone_number = User.objects.get(phone_number=request.data.get("phone"))
+		except ObjectDoesNotExist:
+			return Response("User does not exist", status=404)  # False Call
 
-        keygen = generateKey()
-        key = base64.b32encode(keygen.returnValue(request.data.get("phone")).encode())  # Generating Key
-        OTP = pyotp.TOTP(key,interval = EXPIRY_TIME)  # TOTP Model 
-        if OTP.verify(request.data["otp"]):  # Verifying the OTP
-            phone_number.isVerified = True
-            phone_number.save()
-            return Response("You are authorised", status=200)
-        return Response("OTP is wrong/expired", status=400)
+		keygen = generateKey()
+		key = base64.b32encode(keygen.returnValue(request.data.get("phone")).encode())  # Generating Key
+		OTP = pyotp.TOTP(key,interval = EXPIRY_TIME)  # TOTP Model 
+		time_remaining = OTP.interval - datetime.now().timestamp() % OTP.interval
+		print(time_remaining)
+		if OTP.verify(request.data["otp"]):  # Verifying the OTP
+			phone_number.isVerified = True
+			phone_number.save()
+			return Response("You are authorised", status=200)
+		return Response("OTP is wrong/expired", status=400)
