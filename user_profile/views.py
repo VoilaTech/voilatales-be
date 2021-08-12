@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User
 import random
+import requests
+from .serializers import UserSerializer
 
 time_creation = datetime.now().timestamp()
 
@@ -12,38 +14,47 @@ def otp_gen():
 
 class getRegistered(APIView):
     def post(self, request):
-        time_creation = datetime.now().timestamp()
-        phone = request.data.get("phone")
-        display_name=request.data.get("display_name")
-        username= request.data.get("username")
-        display_image=request.data.get("display_image")
-        try:
-            phone_number = User.objects.get(phone_number=phone)
-            phone_number.otp = otp_gen()
-        except ObjectDoesNotExist:
-            User.objects.create(
-            phone_number=phone,
-            display_name=display_name,
-            username= username,
-            display_image=display_image,
-            isVerified = False,
-            otp = otp_gen()
-            )
-            phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
-        phone_number.save()  # Save the data
-        return Response({"OTP": phone_number.otp}, status=200)  # Just for demonstration
-
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            time_creation = datetime.now().timestamp()
+            phone = request.data.get("phone_number")
+            display_name=request.data.get("display_name")
+            username= request.data.get("username")
+            display_image=request.data.get("display_image")
+            try:
+                phone_number = User.objects.get(phone_number=phone)
+                phone_number.otp = otp_gen()
+            except ObjectDoesNotExist:
+                User.objects.create(
+                phone_number=phone,
+                display_name=display_name,
+                username= username,
+                display_image=display_image,
+                isVerified = False,
+                otp = otp_gen()
+                )
+                phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
+            phone_number.save()
+            url = "https://www.fast2sms.com/dev/bulkV2"
+            number = (str(phone_number.phone_number))[3:]
+            querystring = {"authorization":"b7YBvi3RELWtZau6nCSpsH9AogKhJdrcNTeFwqm0yQX14zlVOUeKqkxBZd8JDXFC1s3ENQvj9HY2t0mi","variables_values":str(phone_number.otp),"route":"otp","numbers": number}
+            headers = {
+                'cache-control': "no-cache"
+            }
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            print(response.text)
+            return Response({"OTP": phone_number.otp}, status=200)  
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class getVerified(APIView):
     def post(self, request):
-        # import pdb; pdb.set_trace() 
         try:
-            phone_number = User.objects.get(phone_number=request.data.get("phone"))
+            phone_number = User.objects.get(phone_number=request.data.get("phone_number"))
         except ObjectDoesNotExist:
             return Response("User does not exist", status=404)  # False Call
 
         keygen = phone_number.otp
-        if datetime.now().timestamp() - time_creation < 50:
+        if datetime.now().timestamp() - time_creation < 500:
             if keygen == request.data["otp"]:  # Verifying the OTP
                 phone_number.isVerified = True
                 phone_number.otp=None
