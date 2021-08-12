@@ -1,69 +1,69 @@
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-import pyotp
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User
-import base64
+import random
+import requests
+from .serializers import UserSerializer
 
+time_creation = datetime.now().timestamp()
 
-
-
-class generateKey:
-	@staticmethod
-	def returnValue(phone):
-		return str(phone) + str(datetime.date(datetime.now())) + "Some Random Secret Key"
-
-
-EXPIRY_TIME = 300 # seconds
+def otp_gen():
+    return random.randrange(99999, 999999)
 
 class getRegistered(APIView):
-
-	# Get to Create a call for OTP
-	# @staticmethod
-	def post(self, request):
-		phone = request.data.get("phone")
-		display_name=request.data.get("display_name")
-		username= request.data.get("username")
-		display_image=request.data.get("display_image")
-		print()
-		print(type(phone))
-		try:
-			phone_number = User.objects.get(phone_number=phone)  # if Mobile already exists the take this else create New One
-		except ObjectDoesNotExist:
-			User.objects.create(
-				phone_number=phone,
-				display_name=display_name,
-				username= username,
-				display_image=display_image,
-				isVerified = False
-			)
-			phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
-		phone_number.save()  # Save the data
-		keygen = generateKey()
-		key = base64.b32encode(keygen.returnValue(phone).encode())  # Key is generated
-		OTP = pyotp.TOTP(key,interval = EXPIRY_TIME)  # TOTP Model for OTP is created
-		print(OTP.now())
-		# Using Multi-Threading send the OTP Using Messaging Services like Twilio or Fast2sms
-		return Response({"OTP": OTP.now()}, status=200)  # Just for demonstration
-
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            time_creation = datetime.now().timestamp()
+            phone = request.data.get("phone_number")
+            display_name=request.data.get("display_name")
+            username= request.data.get("username")
+            display_image=request.data.get("display_image")
+            try:
+                phone_number = User.objects.get(phone_number=phone)
+                phone_number.otp = otp_gen()
+            except ObjectDoesNotExist:
+                User.objects.create(
+                phone_number=phone,
+                display_name=display_name,
+                username= username,
+                display_image=display_image,
+                isVerified = False,
+                otp = otp_gen()
+                )
+                phone_number = User.objects.get(phone_number=phone)  # user Newly created Model
+            phone_number.save()
+            url = "https://www.fast2sms.com/dev/bulkV2"
+            number = (str(phone_number.phone_number))[3:]
+            querystring = {"authorization":"b7YBvi3RELWtZau6nCSpsH9AogKhJdrcNTeFwqm0yQX14zlVOUeKqkxBZd8JDXFC1s3ENQvj9HY2t0mi","variables_values":str(phone_number.otp),"route":"otp","numbers": number}
+            headers = {
+                'cache-control': "no-cache"
+            }
+            response = requests.request("GET", url, headers=headers, params=querystring)
+            print(response.text)
+            return Response({"OTP": phone_number.otp}, status=200)  
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class getVerified(APIView):
-	# This Method verifies the OTP
-	def post(self, request):
-		# import pdb; pdb.set_trace()
-		try:
-			phone_number = User.objects.get(phone_number=request.data.get("phone"))
-		except ObjectDoesNotExist:
-			return Response("User does not exist", status=404)  # False Call
+    def post(self, request):
+        try:
+            phone_number = User.objects.get(phone_number=request.data.get("phone_number"))
+        except ObjectDoesNotExist:
+            return Response("User does not exist", status=404)  # False Call
 
-		keygen = generateKey()
-		key = base64.b32encode(keygen.returnValue(request.data.get("phone")).encode())  # Generating Key
-		OTP = pyotp.TOTP(key,interval = EXPIRY_TIME)  # TOTP Model 
-		time_remaining = OTP.interval - datetime.now().timestamp() % OTP.interval
-		print(time_remaining)
-		if OTP.verify(request.data["otp"]):  # Verifying the OTP
-			phone_number.isVerified = True
-			phone_number.save()
-			return Response("You are authorised", status=200)
-		return Response("OTP is wrong/expired", status=400)
+        keygen = phone_number.otp
+        if datetime.now().timestamp() - time_creation < 500:
+            if keygen == request.data["otp"]:  # Verifying the OTP
+                phone_number.isVerified = True
+                phone_number.otp=None
+                phone_number.save()
+                return Response("You are authorised", status=200)
+            return Response("OTP is wrong", status=400)
+        else:
+            return Response("OTP is expired", status=400)
+        
+
+
+        
