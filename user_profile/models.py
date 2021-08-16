@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
 import uuid
+from django.contrib.auth.models import PermissionsMixin
 
 
 class UserManager(BaseUserManager):
@@ -21,13 +22,27 @@ class UserManager(BaseUserManager):
             isVerified    = isVerified,
             otp           = otp,
         )
-
         user.set_unusable_password()
-        user.save(using = None)
+        user.save(using = self._db)
 
         return user
 
-class User(AbstractBaseUser):
+    def create_superuser(self,username,password=None, **extra_fields):
+        if not username:
+            raise ValueError("User must have an Username")
+        if not password:
+            raise ValueError("User must have a password")
+
+        user = self.model(
+            username=username
+        )
+        user.is_superuser = True
+        user.is_staff = True
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
     phone_number = PhoneNumberField(unique=True, editable=True)
     display_name = models.CharField(max_length=50)
@@ -35,6 +50,9 @@ class User(AbstractBaseUser):
     display_image = models.ImageField(null=True, upload_to = 'displayimg/')
     isVerified = models.BooleanField(blank=False, default=False)
     otp = models.IntegerField(null=True)
+    is_superuser = models.BooleanField(default=False)
+    is_staff     = models.BooleanField(default=False)
+
 
     USERNAME_FIELD = 'username'
     objects        = UserManager()

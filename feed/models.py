@@ -8,4 +8,5 @@ class Post(models.Model):
     description  = models.CharField(max_length=150, null=True)
     cover_image  = models.ImageField(upload_to='coverimg/')
     audio_field  = models.FileField(upload_to='audio/')
+    created_at   = models.DateTimeField(auto_now_add=True, null=True)
 
