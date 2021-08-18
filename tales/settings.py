@@ -32,7 +32,10 @@ INSTALLED_APPS = [
     'feed',
     'user_profile',
     'rest_framework',
+    'rest_framework.authtoken'
 ]
+
+AUTH_USER_MODEL = 'user_profile.User'
 
 APPEND_SLASH=False
 
@@ -142,6 +145,15 @@ SITE_ID = 1
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication'
+    ]
+}
 
 # media files storage directory
 MEDIA_ROOT = BASE_DIR / "media"

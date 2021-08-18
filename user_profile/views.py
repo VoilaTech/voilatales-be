@@ -6,6 +6,9 @@ from .models import User
 import random
 import requests
 from .serializers import UserSerializer
+from rest_framework.authtoken.models import Token
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 time_creation = datetime.now().timestamp()
 
@@ -57,12 +60,23 @@ class getVerified(APIView):
         if datetime.now().timestamp() - time_creation < 500:
             if keygen == request.data["otp"]:  # Verifying the OTP
                 phone_number.isVerified = True
+                token  = Token.objects.create(user=phone_number)
                 phone_number.otp=None
                 phone_number.save()
-                return Response("You are authorised", status=200)
+                return Response({"Token": str(token)}, status=200)
             return Response("OTP is wrong", status=400)
         else:
             return Response("OTP is expired", status=400)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated,]
+    
+    def delete(self,request, *args, **kwargs):
+        self.request.user.auth_token.delete()
+        data = {
+            "message": "You have successfully logged out.",
+        }
+        return Response(data, status=status.HTTP_200_OK)
         
 
 
