@@ -6,14 +6,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+class PostList(generics.ListAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated,]
 
-class PostList(generics.ListCreateAPIView):
+class PostCreate(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated,]
 
     def perform_create(self, serializer):
-        # import pdb; pdb.set_trace()
         serializer.save(user_id = self.request.user)
 
 class PostDelete(generics.RetrieveDestroyAPIView):
