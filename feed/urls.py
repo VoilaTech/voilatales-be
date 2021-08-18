@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import PostList
+from .views import PostList,PostDelete
 
 urlpatterns = [
-    path("", PostList.as_view(), name="post")
+    path("create", PostList.as_view(), name="post create"),
+    path("delete/<uuid:pk>", PostDelete.as_view(), name="post delete")
 ]

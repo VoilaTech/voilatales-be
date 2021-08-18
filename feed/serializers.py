@@ -14,5 +14,6 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ['id','user_id', 'description', 'cover_image', 'audio_field', 'created_at']
 
     def validate_user_id(self, value):
+        print(value)
         if value!=self.context['request'].user:
             serializers.ValidationError('You cannot access other users post')
