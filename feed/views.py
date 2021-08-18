@@ -12,3 +12,9 @@ class PostList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         # import pdb; pdb.set_trace()
         serializer.save(user_id = self.request.user)
+
+class PostList(generics.DestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated,]
+    

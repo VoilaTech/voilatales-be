@@ -12,3 +12,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id','user_id', 'description', 'cover_image', 'audio_field', 'created_at']
+
+    def validate_user_id(self, value):
+        if value!=self.context['request'].user:
+            serializers.ValidationError('You cannot access other users post')
