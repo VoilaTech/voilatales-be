@@ -42,6 +42,7 @@ APPEND_SLASH=False
 COMMENTS_APP = 'django_comments_xtd'
 
 COMMENTS_XTD_MAX_THREAD_LEVEL = 100
+COMMENTS_XTD_LIST_ORDER = ('-thread_id', 'order')
 
 COMMENTS_XTD_APP_MODEL_OPTIONS = {
     'tales.feed': {
@@ -49,15 +50,6 @@ COMMENTS_XTD_APP_MODEL_OPTIONS = {
         'allow_feedback': True,
         'show_feedback': True,
         'who_can_post': 'users'
-    }
-}
-
-COMMENTS_XTD_APP_MODEL_OPTIONS = {
-    'default': {
-        'allow_flagging': True,
-        'allow_feedback': True,
-        'show_feedback': False,
-        'who_can_post': 'all'
     }
 }
 
@@ -145,6 +137,8 @@ SITE_ID = 1
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MY_DRF_AUTH_TOKEN = "08d9fd42468aebbb8087b604b526ff0821ce4525"
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
