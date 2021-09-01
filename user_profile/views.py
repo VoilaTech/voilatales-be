@@ -1,18 +1,22 @@
 from datetime import datetime
+from django.core import exceptions
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User, UserRelationsip
+from .models import User, UserRelationship
 import random
 import requests
-from .serializers import UserSerializer, FollowersSerializer, FollowingSerializer
+from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
-
+from django.views.decorators.csrf import csrf_exempt
+import uuid
+# from rest_framework.decorators import api_view
+# from rest_framework.parsers import JSONParser
+from django.http import HttpResponse, JsonResponse
 time_creation = datetime.now().timestamp()
-
 def otp_gen():
     return random.randrange(99999, 999999)
 
@@ -78,26 +82,66 @@ class LogoutView(APIView):
             "message": "You have successfully logged out.",
         }
         return Response(data, status=status.HTTP_200_OK)
-        
-@api_view()
-def follow(request):
-    if request.method == 'POST':
-        action = UserRelationsip.objects.create(user_id=request.user.id, following_user_id=request.data.get('followig_id'))
-        return Response({"data": action})
-@api_view()
-def unfollow(request):
-    if request.method == 'POST':
-        action = UserRelationsip.objects.filter(user_id=request.user.id, following_user_id=request.data.get('following_id'))
-        return Response({"data": action})
 
-# @api_view()
+
+
+class UserRelationshipView(APIView):
+    def post(self, request):
+        user = User.objects.get(id=self.request.user.id)
+        followinguser = User.objects.get(id=uuid.UUID(self.request.data.get('following_id')))
+        userfollow = UserRelationship.objects.filter(user_id=user, following_user_id=followinguser)
+        if userfollow:
+            userfollow.delete()
+            return Response("Successfully Unfollowed", status=status.HTTP_200_OK)
+        else:
+            UserRelationship.objects.create(user_id=user, following_user_id=followinguser)
+            return Response("Successfully followed", status=status.HTTP_200_OK)
+    def get(self, request,id):
+        user = User.objects.get(id=uuid.UUID(id))
+        following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id')
+        follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id')
+        following_users = []
+        follower_users = []
+        for i in following:
+            temp_user=User.objects.get(id=i[0])
+            temp = {}
+            temp["username"] = temp_user.username
+            temp["display_name"] = temp_user.display_name
+            temp["id"] = temp_user.id
+            following_users.append(temp)
+        for i in follower:
+            temp_user=User.objects.get(id=i[0])
+            temp = {}
+            temp["username"] = temp_user.username
+            temp["display_name"] = temp_user.display_name
+            temp["id"] = temp_user.id
+            follower_users.append(temp)
+        return JsonResponse({"status": 200, "data": {"following" : following_users, "follower": follower_users, "following_count": len(following_users), "follower_count": len(follower_users)}})
+        
+
+
+
+# # @api_view()
+# @csrf_exempt
 # def following_list(request):
-#     if request.method == 'GET':
-#         following = UserRelationsip.objects.filter(user_id=request.data.get('user_id')).values_list('following')
-#         return Response({"data": following})
+#     try:
+#         if request.method == 'GET':
+#             following = UserRelationsip.objects.filter(user_id=request.data.get('user_id')).values_list('following')
+#             follower = UserRelationsip.objects.filter(following_user_id=request.data.get('user_id')).values_list('user_id')
+#             return JsonResponse({"status": 200, "data": {"following" : following, "follower": follower}})
+#     except exceptions as e:
+#         print(e)
+#     else:
+#         return HttpResponse(status=204)
 
 # @api_view()
 # def follower_list(request):
 #     if request.method == 'GET':
 #         follower = UserRelationsip.objects.filter(following_user_id=request.data.get('user_id')).values_list('user_id')
 #         return Response({"data": follower})
+
+
+
+# ef7c51fb0ac7537d2ad4cc1caad8c775b61f51ae
+# 1c2813ae403c6da0f6f79b3fde4c96d6d72c9919
+# a595a3b8fa49ec0064feb923d33a7a5457559132

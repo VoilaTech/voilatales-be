@@ -1,7 +1,7 @@
 from rest_framework import serializers
 import uuid
 from phonenumber_field.serializerfields import PhoneNumberField
-from .models import User, UserRelationsip
+from .models import User, UserRelationship
 
 class UserSerializer(serializers.ModelSerializer):
     id              = serializers.UUIDField(default=uuid.uuid4)
@@ -14,6 +14,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id','phone_number','display_name','username','display_image','isVerified','otp','following','followers']
+        fields = ['id','phone_number','display_name','username','display_image','isVerified','otp']
     
 
