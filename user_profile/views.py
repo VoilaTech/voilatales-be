@@ -117,30 +117,6 @@ class UserRelationshipView(APIView):
             temp["id"] = temp_user.id
             follower_users.append(temp)
         return JsonResponse({"status": 200, "data": {"following" : following_users, "follower": follower_users, "following_count": len(following_users), "follower_count": len(follower_users)}})
-        
-
-
-
-# # @api_view()
-# @csrf_exempt
-# def following_list(request):
-#     try:
-#         if request.method == 'GET':
-#             following = UserRelationsip.objects.filter(user_id=request.data.get('user_id')).values_list('following')
-#             follower = UserRelationsip.objects.filter(following_user_id=request.data.get('user_id')).values_list('user_id')
-#             return JsonResponse({"status": 200, "data": {"following" : following, "follower": follower}})
-#     except exceptions as e:
-#         print(e)
-#     else:
-#         return HttpResponse(status=204)
-
-# @api_view()
-# def follower_list(request):
-#     if request.method == 'GET':
-#         follower = UserRelationsip.objects.filter(following_user_id=request.data.get('user_id')).values_list('user_id')
-#         return Response({"data": follower})
-
-
 
 # ef7c51fb0ac7537d2ad4cc1caad8c775b61f51ae
 # 1c2813ae403c6da0f6f79b3fde4c96d6d72c9919
