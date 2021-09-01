@@ -37,7 +37,7 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'user_profile.User'
 
-APPEND_SLASH=False
+
 
 COMMENTS_APP = 'django_comments_xtd'
 
