@@ -1,7 +1,7 @@
 from rest_framework import serializers
 import uuid
 from phonenumber_field.serializerfields import PhoneNumberField
-from .models import User
+from .models import User, UserRelationsip
 
 class UserSerializer(serializers.ModelSerializer):
     id              = serializers.UUIDField(default=uuid.uuid4)
@@ -11,6 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
     display_image   = serializers.ImageField(required=False)
     isVerified      = serializers.BooleanField(default=False)
     otp             = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id','phone_number','display_name','username','display_image','isVerified','otp']
+        fields = ['id','phone_number','display_name','username','display_image','isVerified','otp','following','followers']
+    
+

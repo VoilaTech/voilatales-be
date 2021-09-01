@@ -2,13 +2,14 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User
+from .models import User, UserRelationsip
 import random
 import requests
-from .serializers import UserSerializer
+from .serializers import UserSerializer, FollowersSerializer, FollowingSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 
 time_creation = datetime.now().timestamp()
 
@@ -78,6 +79,25 @@ class LogoutView(APIView):
         }
         return Response(data, status=status.HTTP_200_OK)
         
+@api_view()
+def follow(request):
+    if request.method == 'POST':
+        action = UserRelationsip.objects.create(user_id=request.user.id, following_user_id=request.data.get('followig_id'))
+        return Response({"data": action})
+@api_view()
+def unfollow(request):
+    if request.method == 'POST':
+        action = UserRelationsip.objects.filter(user_id=request.user.id, following_user_id=request.data.get('following_id'))
+        return Response({"data": action})
 
+# @api_view()
+# def following_list(request):
+#     if request.method == 'GET':
+#         following = UserRelationsip.objects.filter(user_id=request.data.get('user_id')).values_list('following')
+#         return Response({"data": following})
 
-        
+# @api_view()
+# def follower_list(request):
+#     if request.method == 'GET':
+#         follower = UserRelationsip.objects.filter(following_user_id=request.data.get('user_id')).values_list('user_id')
+#         return Response({"data": follower})

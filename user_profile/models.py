@@ -57,3 +57,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     objects        = UserManager()
 
+class UserRelationsip(models.Model):
+    user_id = models.ForeignKey(User, related_name="follower", on_delete=models.CASCADE)
+    following_user_id = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user_id','following_user_id'], name="unique_followers")
+        ]
+
+    def __str__(self):
+        f"{self.user_id} follows {self.following_user_id}"
