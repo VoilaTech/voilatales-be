@@ -55,7 +55,8 @@ class getRegistered(APIView):
             }
             response = requests.request("GET", url, headers=headers, params=querystring)
             return Response({"OTP": phone_number.otp}, status=200)  
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class getVerified(APIView):
     def post(self, request):
