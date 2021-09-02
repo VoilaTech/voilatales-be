@@ -4,7 +4,7 @@ from phonenumber_field.serializerfields import PhoneNumberField
 from .models import User, UserRelationship
 
 class UserSerializer(serializers.ModelSerializer):
-    id              = serializers.UUIDField(default=uuid.uuid4)
+    id              = serializers.UUIDField(default=uuid.uuid4,read_only=True)
     phone_number    = PhoneNumberField()
     display_name    = serializers.CharField(max_length=50,required=False)
     username        = serializers.CharField(max_length=50, required=False)

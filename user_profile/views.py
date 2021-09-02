@@ -13,9 +13,13 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 import uuid
-# from rest_framework.decorators import api_view
-# from rest_framework.parsers import JSONParser
+from django.core import serializers
+import itertools
 from django.http import HttpResponse, JsonResponse
+from rest_framework import generics
+from django.core import serializers
+
+
 time_creation = datetime.now().timestamp()
 def otp_gen():
     return random.randrange(99999, 999999)
@@ -50,7 +54,6 @@ class getRegistered(APIView):
                 'cache-control': "no-cache"
             }
             response = requests.request("GET", url, headers=headers, params=querystring)
-            print(response.text)
             return Response({"OTP": phone_number.otp}, status=200)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -65,10 +68,16 @@ class getVerified(APIView):
         if datetime.now().timestamp() - time_creation < 500:
             if keygen == request.data["otp"]:  # Verifying the OTP
                 phone_number.isVerified = True
-                token  = Token.objects.create(user=phone_number)
-                phone_number.otp=None
-                phone_number.save()
-                return Response({"Token": str(token)}, status=200)
+                token = Token.objects.get(user=phone_number)
+                if token:
+                    phone_number.otp=None
+                    phone_number.save()
+                    return Response({"Token": str(token),"data": serializers.serialize('json',phone_number)})
+                else:
+                    token  = Token.objects.create(user=phone_number)
+                    phone_number.otp=None
+                    phone_number.save()
+                return Response({"Token": str(token), "data": serializers.serialize('json',phone_number)}, status=200)
             return Response("OTP is wrong", status=400)
         else:
             return Response("OTP is expired", status=400)
@@ -96,28 +105,23 @@ class UserRelationshipView(APIView):
         else:
             UserRelationship.objects.create(user_id=user, following_user_id=followinguser)
             return Response("Successfully followed", status=status.HTTP_200_OK)
-    def get(self, request,id):
-        user = User.objects.get(id=uuid.UUID(id))
-        following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id')
+    def get(self, request,username):
+        user = User.objects.get(username=username)
+        following = UserRelationship.objects.filter(user_id=user)
         follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id')
-        following_users = []
-        follower_users = []
-        for i in following:
-            temp_user=User.objects.get(id=i[0])
-            temp = {}
-            temp["username"] = temp_user.username
-            temp["display_name"] = temp_user.display_name
-            temp["id"] = temp_user.id
-            following_users.append(temp)
-        for i in follower:
-            temp_user=User.objects.get(id=i[0])
-            temp = {}
-            temp["username"] = temp_user.username
-            temp["display_name"] = temp_user.display_name
-            temp["id"] = temp_user.id
-            follower_users.append(temp)
-        return JsonResponse({"status": 200, "data": {"following" : following_users, "follower": follower_users, "following_count": len(following_users), "follower_count": len(follower_users)}})
+        
+        following_data  = list(itertools.chain(*following))
+        follower_data   = list(itertools.chain(*follower))
 
-# ef7c51fb0ac7537d2ad4cc1caad8c775b61f51ae
-# 1c2813ae403c6da0f6f79b3fde4c96d6d72c9919
-# a595a3b8fa49ec0064feb923d33a7a5457559132
+        return JsonResponse({"status": 200, "data": {"following" : following_data, "follower": follower_data, "following_count": len(following_data), "follower_count": len(follower_data)}})
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated,]
+
+class UserRetrive(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    lookup_field = 'username'
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated,]
