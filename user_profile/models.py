@@ -56,6 +56,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     objects        = UserManager()
+    def get_profile_pic_url(self):
+        if not self.display_image:
+            return None
+        return "http://localhost:8000" + self.display_image.url
 
 class UserRelationship(models.Model):
     user_id = models.ForeignKey(User, related_name="follower", on_delete=models.CASCADE)
