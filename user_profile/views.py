@@ -1,4 +1,5 @@
 from datetime import datetime
+from feed.models import Post
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -111,8 +112,9 @@ class UserPostRelationshipView(GenericAPIView):
 class UserDataView(APIView):
     def get(self, request,username):
         user = User.objects.get(username=username)
-        following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id')
-        follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id')
+        posts = Post.objects.filter(user_id=user).values()
+        following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id', flat=True)
+        follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id', flat=True)
         user_data={
             "username" : user.username,
             "display_name" : user.display_name,
@@ -123,7 +125,7 @@ class UserDataView(APIView):
         follower_data = []
 
         for i in following:
-            temp_user=User.objects.get(id=i[0])
+            temp_user=User.objects.get(id=i)
             temp = {}
             temp["username"] = temp_user.username
             temp["display_name"] = temp_user.display_name
@@ -131,8 +133,7 @@ class UserDataView(APIView):
             temp["display_image"] = temp_user.get_profile_pic_url(),
             following_data.append(temp)
         for i in follower:
-            print(i)
-            temp_user=User.objects.get(id=i[0])
+            temp_user=User.objects.get(id=i)
             temp = {}
             temp["username"] = temp_user.username
             temp["display_name"] = temp_user.display_name
@@ -140,7 +141,8 @@ class UserDataView(APIView):
             temp["display_image"] = temp_user.get_profile_pic_url(),
             follower_data.append(temp)
 
-        return JsonResponse({"status": 200, "data": {"user": user_data, "following" : following_data, "follower": follower_data, "following_count": len(following_data), "follower_count": len(follower_data)}})
+        return JsonResponse({"status": 200, "data": {"user": user_data, 'posts': list(posts), "following" : following_data, "follower": follower_data, "following_count": len(following_data), "follower_count": len(follower_data)}})
+
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()

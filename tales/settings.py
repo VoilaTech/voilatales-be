@@ -15,7 +15,9 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if config('DEBUG') == "True" else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost:8000/', '127.0.0.1', 'https://voilatales.herokuapp.com/']
+
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -153,7 +155,6 @@ REST_FRAMEWORK = {
     
 }
 
-ALLOWED_HOSTS = ['localhost:8000/', '127.0.0.1', 'https://voilatales.herokuapp.com/']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
