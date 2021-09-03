@@ -15,5 +15,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id','phone_number','display_name','username','display_image','isVerified','otp']
-    
+
+class UserVerifySerializer(serializers.Serializer):
+    phone_number    = PhoneNumberField()
+    otp             = serializers.IntegerField()
+
 

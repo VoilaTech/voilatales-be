@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from .models import User, UserRelationship
 import random
 import requests
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserVerifySerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -13,22 +13,14 @@ import uuid
 from django.http import JsonResponse
 from rest_framework import generics
 from decouple import config
+from rest_framework.generics import GenericAPIView 
 
 time_creation = datetime.now().timestamp()
 def otp_gen():
     return random.randrange(99999, 999999)
 
-class getRegistered(APIView):
-    # serializer_class = UserSerializer
-    # def get_serializer(self):
-    #     return self.serializer_class
-    """
-    post: User Authentication
-
-    |Enter the phone_number it is a required field|
-    |Enter the display_name if you're a new user|
-    |Enter the username if you're a new user|
-    """
+class getRegistered(GenericAPIView):
+    serializer_class = UserSerializer
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -62,7 +54,8 @@ class getRegistered(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class getVerified(APIView):
+class getVerified(GenericAPIView):
+    serializer_class = UserVerifySerializer
     def post(self, request):
         try:
             user = User.objects.get(phone_number=request.data.get("phone_number"))
@@ -70,7 +63,7 @@ class getVerified(APIView):
             return Response("User does not exist", status=404)  # False Call
 
         keygen = user.otp
-        if datetime.now().timestamp() - time_creation < config('TIME'):
+        if datetime.now().timestamp() - time_creation < int(config('TIME')):
             if keygen == request.data["otp"]:  # Verifying the OTP
                 user.isVerified = True
                 try:
@@ -83,7 +76,7 @@ class getVerified(APIView):
                     "Token": str(token),
                     "username": user.username,
                     "display_name": user.display_name,
-                    "display_image": user.display_image,
+                    "display_image": user.get_profile_pic_url(),
                     "id": user.id
                 }
                 return Response(data, status=200)
