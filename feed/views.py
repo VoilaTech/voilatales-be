@@ -5,13 +5,17 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from user_profile.models import User
 
 class PostList(generics.ListAPIView):
-    queryset = Post.objects.all()
+    # queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated,]
+    def get_queryset(self):
+        user = User.objects.get(username=self.kwargs['username'])
+        return Post.objects.filter(user_id=user)
 
-class PostCreate(generics.ListCreateAPIView):
+class PostCreate(generics.CreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated,]
@@ -19,7 +23,7 @@ class PostCreate(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user_id = self.request.user)
 
-class PostDelete(generics.RetrieveDestroyAPIView):
+class PostDelete(generics.DestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated,]

@@ -16,8 +16,19 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id','phone_number','display_name','username','display_image','isVerified','otp']
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    display_name    = serializers.CharField(max_length=50,required=False)
+    username        = serializers.CharField(max_length=50, required=False)
+    display_image   = serializers.ImageField(required=False)
+
+    class Meta:
+        model = User
+        fields = ['display_name','username','display_image']
+
 class UserVerifySerializer(serializers.Serializer):
     phone_number    = PhoneNumberField()
     otp             = serializers.IntegerField()
 
+class UserRelationshipSerializer(serializers.Serializer):
+    following_id    = serializers.CharField(required=True)
 

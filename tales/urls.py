@@ -11,10 +11,8 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Tales API",
       default_version='v1',
-      description="api for Voila Tales app",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="voilatect.rv@gmail.com"),
-      license=openapi.License(name="BSD License"),
+      description="Api for Voila Tales app",
+      contact=openapi.Contact(email="voilatect.rv@gmail.com")
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
@@ -25,8 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('user_profile.urls')),
     path('tales/', include('feed.urls')),
-    path('opinions/', include('django_comments_xtd.urls')),
-    path('opinions/', XtdCommentListView.as_view(content_types=["feed.post",],paginate_by=10, page_range=5),
+    path('comments/', include('django_comments_xtd.urls')),
+    path('comments/', XtdCommentListView.as_view(content_types=["feed.post",],paginate_by=10, page_range=5),
             name='comments-xtd-list'),
     path('docs.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

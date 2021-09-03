@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from .models import User, UserRelationship
 import random
 import requests
-from .serializers import UserSerializer, UserVerifySerializer
+from .serializers import UserSerializer, UserVerifySerializer, UserRelationshipSerializer,UserUpdateSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -96,7 +96,8 @@ class LogoutView(APIView):
 
 
 
-class UserRelationshipView(APIView):
+class UserPostRelationshipView(GenericAPIView):
+    serializer_class = UserRelationshipSerializer
     def post(self, request):
         user = User.objects.get(id=self.request.user.id)
         followinguser = User.objects.get(id=uuid.UUID(self.request.data.get('following_id')))
@@ -107,15 +108,20 @@ class UserRelationshipView(APIView):
         else:
             UserRelationship.objects.create(user_id=user, following_user_id=followinguser)
             return Response("Successfully followed", status=status.HTTP_200_OK)
+class UserDataView(APIView):
     def get(self, request,username):
         user = User.objects.get(username=username)
         following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id')
         follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id')
-        
-        # following_data  = list(itertools.chain(*following))
-        # follower_data   = list(itertools.chain(*follower))
+        user_data={
+            "username" : user.username,
+            "display_name" : user.display_name,
+            "id" : user.id,
+            "display_image" : user.get_profile_pic_url(),
+        }
         following_data = []
         follower_data = []
+
         for i in following:
             temp_user=User.objects.get(id=i[0])
             temp = {}
@@ -134,15 +140,22 @@ class UserRelationshipView(APIView):
             temp["display_image"] = temp_user.get_profile_pic_url(),
             follower_data.append(temp)
 
-        return JsonResponse({"status": 200, "data": {"following" : following_data, "follower": follower_data, "following_count": len(following_data), "follower_count": len(follower_data)}})
+        return JsonResponse({"status": 200, "data": {"user": user_data, "following" : following_data, "follower": follower_data, "following_count": len(following_data), "follower_count": len(follower_data)}})
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated,]
 
-class UserRetrive(generics.RetrieveAPIView):
+
+
+class UserUpdate(generics.UpdateAPIView):
     queryset = User.objects.all()
     lookup_field = 'username'
-    serializer_class = UserSerializer
-    permission_classes = []
+    serializer_class = UserUpdateSerializer
+    permission_classes = [IsAuthenticated,]
+
+    def update(self, request):
+        serializer = self.serializer_class(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
