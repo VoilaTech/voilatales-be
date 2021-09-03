@@ -22,7 +22,13 @@ class getRegistered(APIView):
     # serializer_class = UserSerializer
     # def get_serializer(self):
     #     return self.serializer_class
+    """
+    post: User Authentication
 
+    |Enter the phone_number it is a required field|
+    |Enter the display_name if you're a new user|
+    |Enter the username if you're a new user|
+    """
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
