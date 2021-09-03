@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
 import uuid
 from django.contrib.auth.models import PermissionsMixin
+from decouple import config
 
 
 class UserManager(BaseUserManager):
@@ -59,7 +60,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_profile_pic_url(self):
         if not self.display_image:
             return None
-        return "http://localhost:8000" + self.display_image.url
+        return config("BASEURL") + self.display_image.url
 
 class UserRelationship(models.Model):
     user_id = models.ForeignKey(User, related_name="follower", on_delete=models.CASCADE)

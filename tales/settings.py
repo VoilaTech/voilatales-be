@@ -153,6 +153,8 @@ REST_FRAMEWORK = {
     
 }
 
+ALLOWED_HOSTS = ['localhost:8000/', '127.0.0.1', 'https://voilatales.herokuapp.com/']
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
