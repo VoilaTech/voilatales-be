@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     display_name    = serializers.CharField(max_length=50,required=False)
     username        = serializers.CharField(max_length=50, required=False)
     display_image   = serializers.ImageField(required=False)
-    isVerified      = serializers.BooleanField(default=False)
+    isVerified      = serializers.BooleanField(default=False, read_only=True)
     otp             = serializers.IntegerField(read_only=True)
 
     class Meta:

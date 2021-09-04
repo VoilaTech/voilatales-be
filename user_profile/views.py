@@ -21,6 +21,12 @@ def otp_gen():
     return random.randrange(99999, 999999)
 
 class getRegistered(GenericAPIView):
+    '''
+        ## Signin or Signup view
+        ---
+        ### For Signin - it takes phone number
+        ### For Signup - it takes phone number, display name, username, display image(optional)
+    '''
     serializer_class = UserSerializer
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -56,6 +62,11 @@ class getRegistered(GenericAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class getVerified(GenericAPIView):
+    '''
+        ## Verify user view
+        ---
+        ### It takes phone number and otp(which is sent through sms)
+    '''
     serializer_class = UserVerifySerializer
     def post(self, request):
         try:
@@ -86,6 +97,9 @@ class getVerified(GenericAPIView):
             return Response("OTP is expired", status=400)
 
 class LogoutView(APIView):
+    '''
+        ## Logout view
+    '''
     permission_classes = [IsAuthenticated,]
     
     def delete(self,request, *args, **kwargs):
@@ -98,23 +112,43 @@ class LogoutView(APIView):
 
 
 class UserPostRelationshipView(GenericAPIView):
+    '''
+        ## Follow/UnFollow view
+        ---
+        ### For Follow - it takes 2 user id, where user1 follows user2
+        ### For UnFollow - it takes 2 user id, where user1 unfollows user2
+    '''
     serializer_class = UserRelationshipSerializer
     def post(self, request):
         user = User.objects.get(id=self.request.user.id)
         followinguser = User.objects.get(id=uuid.UUID(self.request.data.get('following_id')))
-        userfollow = UserRelationship.objects.filter(user_id=user, following_user_id=followinguser)
+        userfollow = UserRelationship.objects.filter(user=user, following_user=followinguser)
         if userfollow:
             userfollow.delete()
             return Response("Successfully Unfollowed", status=status.HTTP_200_OK)
         else:
-            UserRelationship.objects.create(user_id=user, following_user_id=followinguser)
+            UserRelationship.objects.create(user=user, following_user=followinguser)
             return Response("Successfully followed", status=status.HTTP_200_OK)
 class UserDataView(APIView):
+    '''
+        ## User Data view
+        ---
+        ### It takes a username
+        ### Returns
+        ` data = {
+            user: {},
+            posts: [], 
+            followings: [],
+            followers: [], 
+            followings count: int,
+            followers count: int
+        }`
+    '''
     def get(self, request,username):
         user = User.objects.get(username=username)
-        posts = Post.objects.filter(user_id=user).values()
-        following = UserRelationship.objects.filter(user_id=user).values_list('following_user_id', flat=True)
-        follower = UserRelationship.objects.filter(following_user_id=user).values_list('user_id', flat=True)
+        posts = Post.objects.filter(user=user).values()
+        following = UserRelationship.objects.filter(user=user).values_list('following_user', flat=True)
+        follower = UserRelationship.objects.filter(following_user=user).values_list('user', flat=True)
         user_data={
             "username" : user.username,
             "display_name" : user.display_name,
@@ -123,7 +157,9 @@ class UserDataView(APIView):
         }
         following_data = []
         follower_data = []
-
+        for i in posts:
+            i["cover_image"] = config('BASEURL') + "/media/" + i["cover_image"]
+            i["audio_field"] = config('BASEURL') + "/media/" + i["audio_field"]
         for i in following:
             temp_user=User.objects.get(id=i)
             temp = {}
@@ -145,12 +181,22 @@ class UserDataView(APIView):
 
 
 class UserList(generics.ListAPIView):
+    '''
+        ## User List view
+        ---
+        ### It returns all the existing users
+    '''
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
 
 class UserUpdate(generics.UpdateAPIView):
+    '''
+        ## User Update view
+        ---
+        ### It takes username, display name, display image
+    '''
     queryset = User.objects.all()
     lookup_field = 'username'
     serializer_class = UserUpdateSerializer
