@@ -11,7 +11,10 @@ class Post(models.Model):
     cover_image  = models.ImageField(upload_to='coverimg/')
     audio_field  = models.FileField(upload_to='audio/')
     created_at   = models.DateTimeField(auto_now_add=True, null=True)
-
+    def __str__(self):
+        if len(self.description) > 15:
+            return f"{self.user} posted a tale with description as {self.description[0:15]}..."
+        return f"{self.user} posted a tale with description as {self.description}"
 
 @receiver(should_request_be_authorized)
 def my_callback(sender, comment, request, **kwargs):
